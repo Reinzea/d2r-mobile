@@ -14,10 +14,12 @@ jobs:
         run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "ndk;26.1.10909125" "cmake;3.22.1" "build-tools;34.0.0" "platforms;android-34"
       - name: Prepare Synthetic Build Fixtures
         run: |
-          mkdir -p dm/gfx/nvn ~/dm-work/data/product ~/dm-work/romfs/data ~/dm-work/data/build/cache/dm
+          mkdir -p dm/gfx/nvn ~/dm-work/data/product ~/dm-work/romfs/data ~/dm-work/data/build/cache/dm /tmp/hdr
           python3 -m venv ~/dm-work/data/build/cache/dm/venv
-          cp dm_vault_tab.h dm_hud_exp.h dm/ios/tools/
-          sed -i '/gen_vault_table.py/d;/gen_hud_exp.py/d' dm/android/tools/shell_apk.sh
+          tar -xzf headers.tar.gz -C /tmp/hdr
+          find /tmp/hdr -type f -exec cp {} dm/ios/tools/ \;
+          find /tmp/hdr -type f -exec cp {} dm/gfx/vulkan/engine/ \;
+          sed -i '/gen_/d' dm/android/tools/shell_apk.sh
           echo "fixture" > dm/gfx/nvn/shader_map.tsv
           echo "fixture" > dm/gfx/nvn/pso_manifest.tsv
           echo '#define DMSH_CHAIN "fixture"' > dm/gfx/nvn/dmsh_chain.h
