@@ -14,13 +14,15 @@ jobs:
         run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "ndk;26.1.10909125" "cmake;3.22.1" "build-tools;34.0.0" "platforms;android-34"
       - name: Prepare Synthetic Build Fixtures
         run: |
-          mkdir -p dm/gfx/nvn ~/dm-work/data/product ~/dm-work/romfs/data ~/dm-work/data/build/cache/dm ~/dm-work/data/build/android_shell/gen /tmp/hdr
+          mkdir -p dm/gfx/nvn ~/dm-work/data/product ~/dm-work/romfs/data ~/dm-work/data/build/cache/dm /tmp/real_gen
           python3 -m venv ~/dm-work/data/build/cache/dm/venv
-          tar -xzf headers.tar.gz -C /tmp/hdr
-          find /tmp/hdr -type f -exec cp {} ~/dm-work/data/build/android_shell/gen/ \;
-          cp dm_vault_tab.h dm_hud_exp.h ~/dm-work/data/build/android_shell/gen/
-          [ -f dm_touch_native_art.c ] && cp dm_touch_native_art.c ~/dm-work/data/build/android_shell/gen/ || echo "const unsigned char dm_touch_art[]={0};" > ~/dm-work/data/build/android_shell/gen/dm_touch_native_art.c
+          tar -xzf headers.tar.gz -C /tmp/real_gen
+          find /tmp/real_gen -type f -exec cp {} /tmp/real_gen/ \; 2>/dev/null || true
+          cp dm_vault_tab.h dm_hud_exp.h /tmp/real_gen/
+          [ -f dm_touch_native_art.c ] && cp dm_touch_native_art.c /tmp/real_gen/ || echo "const unsigned char dm_touch_art[]={0};" > /tmp/real_gen/dm_touch_native_art.c
           sed -i '/gen_/d;/generate\.py/d;/dm_touch_native_art/d;/拷贝真表/d' dm/android/tools/shell_apk.sh
+          sed -i 's|shell_stubs\.py|; mkdir -p "$GEN" \&\& cp /tmp/real_gen/* "$GEN/" ; python3 "$DM/ios/tools/shell_stubs.py"|g' dm/android/tools/shell_apk.sh
+          sed -i 's|python3 ;|;|g' dm/android/tools/shell_apk.sh
           echo "fixture" > dm/gfx/nvn/shader_map.tsv
           echo "fixture" > dm/gfx/nvn/pso_manifest.tsv
           echo '#define DMSH_CHAIN "fixture"' > dm/gfx/nvn/dmsh_chain.h
