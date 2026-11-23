@@ -19,7 +19,9 @@ jobs:
           tar -xzf headers.tar.gz -C /tmp/hdr
           find /tmp/hdr -type f -exec cp {} dm/ios/tools/ \;
           find /tmp/hdr -type f -exec cp {} dm/gfx/vulkan/engine/ \;
-          sed -i '/gen_/d' dm/android/tools/shell_apk.sh
+          mkdir -p dm/ios/tools/native_art/out
+          find /tmp/hdr -type f -exec cp {} dm/ios/tools/native_art/out/ \;
+          sed -i '/gen_/d;/generate\.py/d' dm/android/tools/shell_apk.sh
           echo "fixture" > dm/gfx/nvn/shader_map.tsv
           echo "fixture" > dm/gfx/nvn/pso_manifest.tsv
           echo '#define DMSH_CHAIN "fixture"' > dm/gfx/nvn/dmsh_chain.h
