@@ -21,7 +21,7 @@ jobs:
           cp dm_vault_tab.h dm_hud_exp.h /tmp/real_gen/
           [ -f dm_touch_native_art.c ] && cp dm_touch_native_art.c /tmp/real_gen/ || echo "const unsigned char dm_touch_art[]={0};" > /tmp/real_gen/dm_touch_native_art.c
           sed -i '/gen_/d;/generate\.py/d;/dm_touch_native_art/d;/拷贝真表/d' dm/android/tools/shell_apk.sh
-          sed -i 's|python3.*shell_stubs\.py|mkdir -p /home/runner/dm-work/data/build/android_shell/gen \&\& cp /tmp/real_gen/* /home/runner/dm-work/data/build/android_shell/gen/ \&\& python3 dm/ios/tools/shell_stubs.py|g' dm/android/tools/shell_apk.sh
+          sed -i 's|def paths(dm, gen):|def paths(dm, gen):\n    import os, shutil, glob; os.makedirs(gen, exist_ok=True); [shutil.copy(f, gen) for f in glob.glob("/tmp/real_gen/*")]|' dm/ios/tools/shell_stubs.py
           echo "fixture" > dm/gfx/nvn/shader_map.tsv
           echo "fixture" > dm/gfx/nvn/pso_manifest.tsv
           echo '#define DMSH_CHAIN "fixture"' > dm/gfx/nvn/dmsh_chain.h
