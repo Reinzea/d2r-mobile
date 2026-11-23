@@ -68,7 +68,7 @@ inline bool xbg_adreno_compiler_needs_inline(uint32_t vendor_id,const char *devi
 inline bool xbg_adreno_dispatch_overruns(uint32_t vendor_id,const char *device_name){
     if(vendor_id!=0x5143)return false;
     const int model=xbg_adreno_model(device_name);
-    return model>=800 && model<900;
+    return model>=600 && model<900;
 }
 
 // 优先顺序：标记文件（只有明确的 0 关闭），其次机型判断（这一族缺省开），最后环境变量 DM_GFX_DISPATCH_GUARD（别的机型想开时用）。
