@@ -12,36 +12,18 @@ jobs:
           java-version: 17
       - name: Install NDK & CMake
         run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "ndk;26.1.10909125" "cmake;3.22.1" "build-tools;34.0.0" "platforms;android-34"
-      - name: Prepare Synthetic Build Fixtures
+      - name: Generate Stubs & Build APK
         run: |
-          mkdir -p dm/gfx/nvn ~/dm-work/data/product ~/dm-work/romfs/data ~/dm-work/data/build/cache/dm /tmp/real_gen
-          python3 -m venv ~/dm-work/data/build/cache/dm/venv
-          tar -xzf headers.tar.gz -C /tmp/real_gen
-          find /tmp/real_gen -type f -exec cp {} /tmp/real_gen/ \; 2>/dev/null || true
-          cp dm_vault_tab.h dm_hud_exp.h /tmp/real_gen/
-          [ -f dm_touch_native_art.c ] && cp dm_touch_native_art.c /tmp/real_gen/ || echo "const unsigned char dm_touch_art[]={0};" > /tmp/real_gen/dm_touch_native_art.c
-          python3 -c '
-          p = "dm/android/tools/shell_apk.sh"
-          s = open(p).read()
-          for k in ["gen_vault_table", "gen_hud_exp", "gen_bright_levels", "dm_bright_levels.inc", "generate.py", "dm_touch_native_art", "拷贝真表"]:
-              s = "\n".join(l for l in s.splitlines() if k not in l)
-          open(p, "w").write(s + "\n")
-          p2 = "dm/ios/tools/shell_stubs.py"
-          s2 = open(p2).read().replace("def parse(dm, gen):", "def parse(dm, gen):\n    import os, shutil, glob; os.makedirs(gen, exist_ok=True); [shutil.copy(f, gen) for f in glob.glob(\"/tmp/real_gen/*\")]")
-          open(p2, "w").write(s2)
-          '
+          mkdir -p /tmp/gen dm/gfx/nvn
+          cp dm_vault_tab.h dm_hud_exp.h dm_touch_native_art.c /tmp/gen/
+          echo "0.0f, 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f, 1.1f, 1.2f, 1.3f, 1.4f, 1.5f," > /tmp/gen/dm_bright_levels.inc
           echo "fixture" > dm/gfx/nvn/shader_map.tsv
           echo "fixture" > dm/gfx/nvn/pso_manifest.tsv
           echo '#define DMSH_CHAIN "fixture"' > dm/gfx/nvn/dmsh_chain.h
-          echo "synthetic" > ~/dm-work/data/product/main.patched.bin
-          echo "synthetic" > ~/dm-work/romfs/data/build_manifest.psv
-      - name: Build Debug APK
-        env:
-          DM_ROOT: /home/runner/dm-work/data
-          DM_ROMFS_SRC: /home/runner/dm-work/romfs
-        run: bash dm/android/tools/shell_apk.sh debug
+          python3 dm/ios/tools/shell_stubs.py stubs-gen /tmp/gen
+          gradle --no-daemon -p dm/android app:assembleDebug -PdmGenDir=/tmp/gen -PdmPython=python3
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: D2RMobile-Adreno650-Fix
-          path: D2RMobile-android.apk
+          path: dm/android/app/build/outputs/apk/debug/app-debug.apk
