@@ -12,11 +12,19 @@ jobs:
           java-version: 17
       - name: Install NDK & CMake
         run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "ndk;26.1.10909125" "cmake;3.22.1" "build-tools;34.0.0" "platforms;android-34"
-      - name: Prepare Version Marker
+      - name: Prepare Synthetic Build Fixtures
         run: |
-          mkdir -p ~/dm-work/data/switch/3.3.94012/Update/RomFS
-          echo "3.3.94012" > ~/dm-work/data/switch/3.3.94012/Update/RomFS/.version
+          mkdir -p dm/gfx/nvn
+          echo "fixture" > dm/gfx/nvn/shader_map.tsv
+          echo "fixture" > dm/gfx/nvn/pso_manifest.tsv
+          echo '#define DMSH_CHAIN "fixture"' > dm/gfx/nvn/dmsh_chain.h
+          mkdir -p ~/dm-work/data/product ~/dm-work/romfs/data
+          echo "synthetic" > ~/dm-work/data/product/main.patched.bin
+          echo "synthetic" > ~/dm-work/romfs/data/build_manifest.psv
       - name: Build Debug APK
+        env:
+          DM_ROOT: /home/runner/dm-work/data
+          DM_ROMFS_SRC: /home/runner/dm-work/romfs
         run: bash dm/android/tools/shell_apk.sh debug
       - name: Upload APK
         uses: actions/upload-artifact@v4
